@@ -17,9 +17,9 @@ import aiofiles
 import cloudscraper
 import garth
 import httpx
-from config import FOLDER_DICT, JSON_FILE, SQL_FILE, config
+from config import FOLDER_DICT, SQL_FILE, config
 from garmin_device_adaptor import wrap_device_info
-from utils import make_activities_file
+from generator import Generator
 
 # logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -372,7 +372,5 @@ if __name__ == "__main__":
         )
     )
     loop.run_until_complete(future)
-    # fit may contain gpx(maybe upload by user)
-    if file_type == "fit":
-        make_activities_file(SQL_FILE, FOLDER_DICT["gpx"], JSON_FILE, file_suffix="gpx")
-    make_activities_file(SQL_FILE, folder, JSON_FILE, file_suffix=file_type)
+    generator = Generator(SQL_FILE)
+    generator.sync_from_data_dir(folder, file_suffix=file_type)
