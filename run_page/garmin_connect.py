@@ -43,8 +43,10 @@ GARMIN_CN_URL_DICT = {
     "ACTIVITY_URL": "https://connectapi.garmin.cn/activity-service/activity/{activity_id}",
 }
 
+
 class GarminActivityType:
     STRENGTH = "fitness_equipment"
+
 
 class Garmin:
     def __init__(self, secret_string, auth_domain, is_only_running=False):

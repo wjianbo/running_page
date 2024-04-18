@@ -40,13 +40,14 @@ ACTIVITY_KEYS = [
 TRAINING_ACTIVITY_KEYS = [
     "activity_id",
     "name",
-    "total_reps"
+    "total_reps",
     "moving_time",
     "type",
     "start_date",
     "start_date_local",
     "average_heartrate",
 ]
+
 
 class TrainingActivity(Base):
     __tablename__ = "training_activities"
@@ -74,6 +75,7 @@ class TrainingActivity(Base):
             out["streak"] = self.streak
 
         return out
+
 
 class Activity(Base):
     __tablename__ = "activities"

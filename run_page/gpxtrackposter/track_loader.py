@@ -46,6 +46,7 @@ def load_fit_file(file_name):
     t.load_fit(file_name)
     return t
 
+
 def load_training_track_from_fit_file(file_name):
     """Load an individual FIT file as a track by using Track.load_fit()"""
     t = TrainingTrack()
