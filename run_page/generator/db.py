@@ -37,6 +37,43 @@ ACTIVITY_KEYS = [
     "average_speed",
 ]
 
+TRAINING_ACTIVITY_KEYS = [
+    "activity_id",
+    "name",
+    "total_reps"
+    "moving_time",
+    "type",
+    "start_date",
+    "start_date_local",
+    "average_heartrate",
+]
+
+class TrainingActivity(Base):
+    __tablename__ = "training_activities"
+
+    activity_id = Column(Integer, primary_key=True)
+    name = Column(String)
+    total_reps = Column(Integer)
+    moving_time = Column(Interval)
+    type = Column(String)
+    start_date = Column(String)
+    start_date_local = Column(String)
+    average_heartrate = Column(Float)
+    streak = None
+
+    def to_dict(self):
+        out = {}
+        for key in ACTIVITY_KEYS:
+            attr = getattr(self, key)
+            if isinstance(attr, (datetime.timedelta, datetime.datetime)):
+                out[key] = str(attr)
+            else:
+                out[key] = attr
+
+        if self.streak:
+            out["streak"] = self.streak
+
+        return out
 
 class Activity(Base):
     __tablename__ = "activities"

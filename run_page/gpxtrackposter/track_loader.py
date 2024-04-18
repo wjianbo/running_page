@@ -10,6 +10,8 @@ import logging
 import os
 import sys
 
+from gpxtrackposter.training_track import TrainingTrack
+
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 import concurrent.futures
 
@@ -41,6 +43,12 @@ def load_tcx_file(file_name):
 def load_fit_file(file_name):
     """Load an individual FIT file as a track by using Track.load_fit()"""
     t = Track()
+    t.load_fit(file_name)
+    return t
+
+def load_training_track_from_fit_file(file_name):
+    """Load an individual FIT file as a track by using Track.load_fit()"""
+    t = TrainingTrack()
     t.load_fit(file_name)
     return t
 
@@ -86,6 +94,21 @@ class TrackLoader:
         tracks = self._merge_tracks(tracks)
         # filter out tracks with length < min_length
         return [t for t in tracks if t.length >= self.min_length]
+
+    def load_training_tracks(self, data_dir, file_suffix="fit"):
+        """Load tracks data_dir and return as a List of tracks"""
+        file_names = [x for x in self._list_data_files(data_dir, file_suffix)]
+        print(f"{file_suffix.upper()} files: {len(file_names)}")
+
+        tracks = []
+
+        loaded_tracks = self._load_data_tracks(
+            file_names, load_training_track_from_fit_file
+        )
+
+        tracks.extend(loaded_tracks.values())
+        log.info(f"Conventionally loaded tracks: {len(loaded_tracks)}")
+        return tracks
 
     def load_tracks_from_db(self, sql_file, is_grid=False):
         session = init_db(sql_file)

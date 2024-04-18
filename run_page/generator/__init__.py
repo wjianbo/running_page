@@ -75,7 +75,7 @@ class Generator:
 
     def sync_from_data_dir(self, data_dir, file_suffix="gpx"):
         loader = track_loader.TrackLoader()
-        tracks = loader.load_tracks(data_dir, file_suffix=file_suffix)
+        tracks = loader.load_training_tracks(data_dir, file_suffix=file_suffix)
         print(f"load {len(tracks)} tracks")
         if not tracks:
             print("No tracks found.")
