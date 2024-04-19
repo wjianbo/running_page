@@ -52,40 +52,6 @@ class TrainingTrack:
         self.start_latlng = []
         self.type = "Training"
 
-    def load_gpx(self, file_name):
-        """
-        TODO refactor with load_tcx to one function
-        """
-        try:
-            self.file_names = [os.path.basename(file_name)]
-            # Handle empty gpx files
-            # (for example, treadmill runs pulled via garmin-connect-export)
-            if os.path.getsize(file_name) == 0:
-                raise TrackLoadError("Empty GPX file")
-            with open(file_name, "r", encoding="utf-8", errors="ignore") as file:
-                self._load_gpx_data(mod_gpxpy.parse(file))
-        except Exception as e:
-            print(
-                f"Something went wrong when loading GPX. for file {self.file_names[0]}, we just ignore this file and continue"
-            )
-            print(str(e))
-            pass
-
-    def load_tcx(self, file_name):
-        try:
-            self.file_names = [os.path.basename(file_name)]
-            # Handle empty tcx files
-            # (for example, treadmill runs pulled via garmin-connect-export)
-            tcx = TCXReader()
-            if os.path.getsize(file_name) == 0:
-                raise TrackLoadError("Empty TCX file")
-            self._load_tcx_data(tcx.read(file_name), file_name=file_name)
-        except Exception as e:
-            print(
-                f"Something went wrong when loading TCX. for file {self.file_names[0]}, we just ignore this file and continue"
-            )
-            print(str(e))
-
     def load_fit(self, file_name):
         try:
             self.file_names = [os.path.basename(file_name)]
@@ -107,20 +73,13 @@ class TrainingTrack:
 
     def load_from_db(self, activity):
         # use strava as file name
-        self.file_names = [str(activity.run_id)]
+        self.file_names = [str(activity.activity_id)]
         start_time = datetime.datetime.strptime(
             activity.start_date_local, "%Y-%m-%d %H:%M:%S"
         )
         self.start_time_local = start_time
-        self.end_time = start_time + activity.elapsed_time
-        self.length = float(activity.distance)
-        if IGNORE_BEFORE_SAVING:
-            summary_polyline = filter_out(activity.summary_polyline)
-        else:
-            summary_polyline = activity.summary_polyline
-        polyline_data = polyline.decode(summary_polyline) if summary_polyline else []
-        self.polylines = [[s2.LatLng.from_degrees(p[0], p[1]) for p in polyline_data]]
-        self.run_id = activity.run_id
+        self.length = int(activity.total_reps)
+        self.run_id = activity.activity_id
 
     def bbox(self):
         """Compute the smallest rectangle that contains the entire track (border box)."""
@@ -243,10 +202,16 @@ class TrainingTrack:
         self.average_heartrate = (
             message["avg_heart_rate"] if "avg_heart_rate" in message else None
         )
-        self.type = message["sport"].lower()
+        active_sets = filter(lambda set: set["set_type"] == "active", fit["set_mesgs"])
+        push_up_only = all(set["category"] == "push_up" for set in active_sets)
+        if push_up_only:
+            self.type = "Push-ups"
+        else:
+            self.type = message["sport"].lower()
 
         # moving_dict
-        self.moving_dict["distance"] = message["total_distance"]
+        self.moving_dict["cycles"] = message["total_cycles"]
+        self.moving_dict["calories"] = message["total_calories"]
         self.moving_dict["moving_time"] = datetime.timedelta(
             seconds=(
                 message["total_moving_time"]
@@ -317,8 +282,10 @@ class TrainingTrack:
     def to_namedtuple(self):
         d = {
             "id": self.run_id,
-            "name": "run from gpx",  # maybe change later
-            "type": "Run",  # Run for now only support run for now maybe change later
+            "name": "training from fit",  # maybe change later
+            "type": self.type,  # Run for now only support run for now maybe change later
+            "reps": self.moving_dict["cycles"],
+            "calories": self.moving_dict["calories"],
             "start_date": self.start_time.strftime("%Y-%m-%d %H:%M:%S"),
             "end": self.end_time.strftime("%Y-%m-%d %H:%M:%S"),
             "start_date_local": self.start_time_local.strftime("%Y-%m-%d %H:%M:%S"),

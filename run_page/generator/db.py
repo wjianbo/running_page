@@ -42,9 +42,11 @@ TRAINING_ACTIVITY_KEYS = [
     "name",
     "total_reps",
     "moving_time",
+    "calories",
     "type",
     "start_date",
     "start_date_local",
+    "location_country",
     "average_heartrate",
 ]
 
@@ -59,6 +61,7 @@ class TrainingActivity(Base):
     type = Column(String)
     start_date = Column(String)
     start_date_local = Column(String)
+    location_country = Column(String)
     average_heartrate = Column(Float)
     streak = None
 
@@ -169,6 +172,63 @@ def update_or_create_activity(session, run_activity):
             )
     except Exception as e:
         print(f"something wrong with {run_activity.id}")
+        print(str(e))
+
+    return created
+
+
+def update_or_create_training_activity(session, training_activity):
+    created = False
+    try:
+        activity = (
+            session.query(TrainingActivity).filter_by(activity_id=int(training_activity.id)).first()
+        )
+        if not activity:
+            start_point = training_activity.start_latlng
+            location_country = getattr(training_activity, "location_country", "")
+            # or China for #176 to fix
+            if not location_country and start_point or location_country == "China":
+                try:
+                    location_country = str(
+                        g.reverse(
+                            f"{start_point.lat}, {start_point.lon}", language="zh-CN"
+                        )
+                    )
+                # limit (only for the first time)
+                except Exception as e:
+                    try:
+                        location_country = str(
+                            g.reverse(
+                                f"{start_point.lat}, {start_point.lon}",
+                                language="zh-CN",
+                            )
+                        )
+                    except Exception as e:
+                        pass
+
+            activity = TrainingActivity(
+                activity_id=training_activity.id,
+                name=training_activity.name,
+                total_reps=training_activity.reps,
+                moving_time=training_activity.moving_time,
+                type=training_activity.type,
+                start_date=training_activity.start_date,
+                start_date_local=training_activity.start_date_local,
+                location_country=location_country,
+                average_heartrate=training_activity.average_heartrate,
+            )
+            session.add(activity)
+            created = True
+        else:
+            activity.name = training_activity.name
+            activity.distance = float(training_activity.distance)
+            activity.moving_time = training_activity.moving_time
+            activity.elapsed_time = training_activity.elapsed_time
+            activity.type = training_activity.type
+            activity.average_heartrate = training_activity.average_heartrate
+            activity.average_speed = float(training_activity.average_speed)
+    except Exception as e:
+        print(f"something wrong with {training_activity.id}")
         print(str(e))
 
     return created

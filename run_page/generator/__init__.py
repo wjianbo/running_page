@@ -9,7 +9,7 @@ from sqlalchemy import func
 
 from polyline_processor import filter_out
 
-from .db import Activity, init_db, update_or_create_activity
+from .db import Activity, init_db, update_or_create_activity, update_or_create_training_activity
 
 from synced_data_file_logger import save_synced_data_file_list
 
@@ -73,7 +73,7 @@ class Generator:
             sys.stdout.flush()
         self.session.commit()
 
-    def sync_from_data_dir(self, data_dir, file_suffix="gpx"):
+    def sync_from_data_dir(self, data_dir, file_suffix="fit"):
         loader = track_loader.TrackLoader()
         tracks = loader.load_training_tracks(data_dir, file_suffix=file_suffix)
         print(f"load {len(tracks)} tracks")
@@ -84,7 +84,7 @@ class Generator:
         synced_files = []
 
         for t in tracks:
-            created = update_or_create_activity(self.session, t.to_namedtuple())
+            created = update_or_create_training_activity(self.session, t.to_namedtuple())
             if created:
                 sys.stdout.write("+")
             else:

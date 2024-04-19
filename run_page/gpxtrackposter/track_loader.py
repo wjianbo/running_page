@@ -15,7 +15,7 @@ from gpxtrackposter.training_track import TrainingTrack
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 import concurrent.futures
 
-from generator.db import Activity, init_db
+from generator.db import Activity, TrainingActivity, init_db
 
 from .exceptions import ParameterError, TrackLoadError
 from .track import Track
@@ -109,6 +109,17 @@ class TrackLoader:
 
         tracks.extend(loaded_tracks.values())
         log.info(f"Conventionally loaded tracks: {len(loaded_tracks)}")
+        return tracks
+
+    def load_training_tracks_from_db(self, sql_file, is_grid=False):
+        session = init_db(sql_file)
+        activities = (session.query(TrainingActivity).filter(TrainingActivity.type == "Push-ups").order_by(TrainingActivity.start_date_local))
+        tracks = []
+        for activity in activities:
+            t = TrainingTrack()
+            t.load_from_db(activity)
+            tracks.append(t)
+        print(f"All tracks: {len(tracks)}")
         return tracks
 
     def load_tracks_from_db(self, sql_file, is_grid=False):
