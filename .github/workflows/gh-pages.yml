@@ -96,13 +96,17 @@ jobs:
       - name: Build
         env:
           REPO_NAME: ${{ github.event.repository.name }}
+          VITE_MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
         run: PATH_PREFIX=/$REPO_NAME pnpm build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload dist repository
+          name: pages-artifact
           path: './dist'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: pages-artifact

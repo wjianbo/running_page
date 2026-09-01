@@ -190,7 +190,9 @@ class Joyrun:
         self.session.headers.update({"ypcookie": loginCookie})
         self.session.cookies.clear()
         self.session.cookies.set("ypcookie", quote(loginCookie).lower())
-        self.session.headers.update(self.device_info_headers)  # 更新设备信息中的 uid 字段
+        self.session.headers.update(
+            self.device_info_headers
+        )  # 更新设备信息中的 uid 字段
 
     def login_by_phone(self):
         params = {
@@ -228,18 +230,18 @@ class Joyrun:
         if not content:
             return []
         try:
-            # eval is bad but easy maybe change it later
-            # TODO fix this
-            # just an easy way to fix joyrun issue, need to refactor this shit
-            # -[34132812,-118126177]- contains `-` so I just fix it by replace
+            # Replace unsafe eval() with ast.literal_eval for safer parsing
+            # -[34132812,-118126177]- contains `-` so we fix it by replace
             try:
-                points = eval(content.replace("]-[", "],["))
-            except Exception as e:
-                print(str(e))
-                print(f"Points: {str(points)} can not eval")
+                # Use ast.literal_eval instead of eval for security
+                normalized_content = content.replace("]-[", "],[")
+                points = ast.literal_eval(normalized_content)
+            except (ValueError, SyntaxError) as e:
+                print(f"Error parsing points content: {e}")
+                return []
             points = [[p[0] / 1000000, p[1] / 1000000] for p in points]
         except Exception as e:
-            print(str(e))
+            print(f"Error processing points: {e}")
             points = []
         return points
 
@@ -567,10 +569,12 @@ class Joyrun:
                 download_joyrun_tcx(tcx_data, str(joyrun_id))
         try:
             heart_rate_list = (
-                eval(run_data["heartrate"]) if run_data["heartrate"] else None
+                ast.literal_eval(run_data["heartrate"])
+                if run_data["heartrate"]
+                else None
             )
-        except Exception as e:
-            print(f"Heart Rate: can not eval for {run_data['heartrate']}: {e}")
+        except (ValueError, SyntaxError) as e:
+            print(f"Heart Rate: can not parse for {run_data['heartrate']}: {e}")
 
         heart_rate = None
         if heart_rate_list:
