@@ -9,6 +9,10 @@ on:
       - master
     paths:
       - .github/workflows/run_data_sync.yml
+      - src/**
+      - config.yml
+      - package.json
+      - pnpm-lock.yaml
       - run_page/nike_sync.py
       - run_page/nike_to_strava_sync.py
       - run_page/strava_sync.py
