@@ -37,7 +37,9 @@ jobs:
 
       - name: Lint with Ruff
         run: |
-          pip install ruff
+          # Keep lint behavior stable; newer Ruff releases enable checks this
+          # repository has not adopted yet.
+          pip install ruff==0.11.9
           ruff check .
 
   node_lint_and_test:
