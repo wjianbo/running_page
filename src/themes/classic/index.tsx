@@ -3,13 +3,16 @@ import { Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import Index from './pages/index';
+import SummaryPage from './pages/total';
 
 export default function ClassicTheme() {
   return (
     <HelmetProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Suspense fallback={<div>Loading...</div>}>
           <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/summary" element={<SummaryPage />} />
             <Route path="*" element={<Index />} />
           </Routes>
         </Suspense>
